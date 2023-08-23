@@ -28,8 +28,8 @@ This sample contains two versions of the code in the following folders:
 | Optimized for         | Description
 |:---                   |:---
 | OS                    | Ubuntu* 20.04
-| Hardware              | Intel® Gen9 <br> Gen11 <br> Xeon CPU
-| Software              | SYCLomatic <br> Intel® oneAPI Base Toolkit (Base Kit)
+| Hardware              | Intel® Gen9 <br> Gen11 <br> Xeon CPU <br> Data Center GPU Max
+| Software              | SYCLomatic (Tag - 20230720) <br> Intel® oneAPI Base Toolkit (Base Kit) version 2023.2.1
 
 For information on how to use SYCLomatic, refer to the materials at *[Migrate from CUDA* to C++ with SYCL*](https://www.intel.com/content/www/us/en/developer/tools/oneapi/training/migrate-from-cuda-to-cpp-with-sycl.html)*.
 
@@ -74,6 +74,15 @@ For this sample, the SYCLomatic tool automatically migrates 100% of the CUDA cod
    ```
    c2s -p compile_commands.json --in-root ../../.. --use-custom-helper=api
    ```
+## Manual Workarounds
+In SYCL kernel, there is no clock feature support. In future it can be added in SYCL. 
+Currently in 02_sycl_migrated added hard coded to make it executable.
+
+> - void clock_block(clock_t *d_o, clock_t clock_count) {
+> -  for (int i = 0; i < 500000; i++) {
+> -    d_o[0] = d_o[0] + i;
+> -  }
+> - }
 
 ## Build and Run the `Concurrent Kernels` Sample
 
@@ -102,27 +111,15 @@ For this sample, the SYCLomatic tool automatically migrates 100% of the CUDA cod
    $ make
    ```
 
-   By default, this command sequence will build the `01_dpct_output`, `02_sycl_migrated` version of the program.
+   By default, this command sequence will build the  `02_sycl_migrated` version of the program.
 
-3. Run the program.
-
-   Run `01_dpct_output` on GPU.
-   ```
-   make run
-   ```
-      Run `01_dpct_output` on CPU.
-   ```
-   export ONEAPI_DEVICE_SELECTOR=cpu
-   make run
-   unset ONEAPI_DEVICE_SELECTOR
-   ```
-4. Run `02_sycl_migrated` on GPU.
+3. Run `02_sycl_migrated` on GPU.
    ```
    make run_sm
    ```
    Run `02_sycl_migrated` on CPU.
    ```
-   export ONEAPI_DEVICE_SELECTOR=cpu
+   export ONEAPI_DEVICE_SELECTOR=opencl:cpu
    make run_sm
    unset ONEAPI_DEVICE_SELECTOR
    ```
@@ -142,11 +139,13 @@ If you receive an error message, troubleshoot the problem using the **Diagnostic
 The following example is for `02_sycl_migrated` for GPU on **Intel(R) UHD Graphics [0x9a60]**.
 ```
 [./a.out] - Starting...
-Device: Intel(R) UHD Graphics P630 [0x3e96]
-> Detected Compute SM 3.0 hardware with 24 multi-processors
+MapSMtoCores for SM 1.3 is undefined.  Default to use 128 Cores/SM
+GPU Device 1: "Kepler" with compute capability 3.0
+
+> Detected Compute SM 3.0 hardware with 12 multi-processors
 Expected time for serial execution of 8 kernels = 0.080s
 Expected time for concurrent execution of 8 kernels = 0.010s
-Measured time for sample = 0.08594s
+Measured time for sample = 0.598s
 Test passed
 ```
 
