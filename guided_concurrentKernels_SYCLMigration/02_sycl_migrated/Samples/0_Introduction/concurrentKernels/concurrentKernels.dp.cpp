@@ -65,11 +65,7 @@ void sum(clock_t *d_clocks, int N, const sycl::nd_item<3> &item_ct1,
   }
 
   s_clocks[item_ct1.get_local_id(2)] = my_sum;
-  /*
-  DPCT1065:0: Consider replacing sycl::nd_item::barrier() with
-  sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better
-  performance if there is no access to global memory.
-  */
+
   item_ct1.barrier();
 
   for (int i = 16; i > 0; i /= 2) {
@@ -78,11 +74,6 @@ void sum(clock_t *d_clocks, int N, const sycl::nd_item<3> &item_ct1,
           s_clocks[item_ct1.get_local_id(2) + i];
     }
 
-    /*
-    DPCT1065:1: Consider replacing sycl::nd_item::barrier() with
-    sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better
-    performance if there is no access to global memory.
-    */
     item_ct1.barrier();
   }
 
@@ -112,48 +103,28 @@ int main(int argc, char **argv) {
   dpct::device_info deviceProp;
   checkCudaErrors(cuda_device = dpct::dev_mgr::instance().current_device_id());
 
-  /*
-  DPCT1003:25: Migrated API does not return error code. (*, 0) is inserted. You
-  may need to rewrite this code.
-  */
   checkCudaErrors((dpct::dev_mgr::instance()
                        .get_device(cuda_device)
                        .get_device_info(deviceProp),
                    0));
 
-  /*
-  DPCT1051:26: SYCL does not support a device property functionally compatible
-  with concurrentKernels. It was migrated to true. You may need to adjust the
-  value of true for the specific device.
-  */
   if ((true == 0)) {
     printf("> GPU does not support concurrent kernel execution\n");
     printf("  CUDA kernel runs will be serialized\n");
   }
 
   printf("> Detected Compute SM %d.%d hardware with %d multi-processors\n",
-         /*
-         DPCT1005:27: The SYCL device version is different from CUDA Compute
-         Compatibility. You may need to rewrite this code.
-         */
          deviceProp.get_major_version(), deviceProp.get_minor_version(),
          deviceProp.get_max_compute_units());
 
   // allocate host memory
   clock_t *a = 0;  // pointer to the array data in host memory
-  /*
-  DPCT1003:28: Migrated API does not return error code. (*, 0) is inserted. You
-  may need to rewrite this code.
-  */
   checkCudaErrors(
       (a = (clock_t *)sycl::malloc_host(nbytes, dpct::get_default_queue()), 0));
 
   // allocate device memory
   clock_t *d_a = 0;  // pointers to data and init value in the device memory
-  /*
-  DPCT1003:29: Migrated API does not return error code. (*, 0) is inserted. You
-  may need to rewrite this code.
-  */
+
   checkCudaErrors(
       (d_a = (clock_t *)sycl::malloc_device(nbytes, dpct::get_default_queue()),
        0));
@@ -163,10 +134,7 @@ int main(int argc, char **argv) {
       (dpct::queue_ptr *)malloc(nstreams * sizeof(dpct::queue_ptr));
 
   for (int i = 0; i < nstreams; i++) {
-    /*
-    DPCT1003:30: Migrated API does not return error code. (*, 0) is inserted.
-    You may need to rewrite this code.
-    */
+
     checkCudaErrors(
         ((streams[i]) = dpct::get_current_device().create_queue(), 0));
   }
@@ -175,15 +143,8 @@ int main(int argc, char **argv) {
   dpct::event_ptr start_event, stop_event;
   std::chrono::time_point<std::chrono::steady_clock> start_event_ct1;
   std::chrono::time_point<std::chrono::steady_clock> stop_event_ct1;
-  /*
-  DPCT1003:31: Migrated API does not return error code. (*, 0) is inserted. You
-  may need to rewrite this code.
-  */
+
   checkCudaErrors((start_event = new sycl::event(), 0));
-  /*
-  DPCT1003:32: Migrated API does not return error code. (*, 0) is inserted. You
-  may need to rewrite this code.
-  */
   checkCudaErrors((stop_event = new sycl::event(), 0));
 
   // the events are used for synchronization only and hence do not need to
@@ -194,10 +155,6 @@ int main(int argc, char **argv) {
   kernelEvent = (dpct::event_ptr *)malloc(nkernels * sizeof(dpct::event_ptr));
 
   for (int i = 0; i < nkernels; i++) {
-    /*
-    DPCT1003:33: Migrated API does not return error code. (*, 0) is inserted.
-    You may need to rewrite this code.
-    */
     checkCudaErrors((kernelEvent[i] = new sycl::event(), 0));
   }
 
@@ -213,11 +170,6 @@ int main(int argc, char **argv) {
       (clock_t)(kernel_time * deviceProp.get_max_clock_frequency());
 #endif
 
-  /*
-  DPCT1012:24: Detected kernel execution time measurement pattern and generated
-  an initial code for time measurements in SYCL. You can change the way time is
-  measured depending on your goals.
-  */
   sycl::event stop_event_streams_nstreams_1;
   start_event_ct1 = std::chrono::steady_clock::now();
   *start_event = dpct::get_default_queue().ext_oneapi_submit_barrier();
@@ -234,25 +186,12 @@ int main(int argc, char **argv) {
           });
     });
     total_clocks += time_clocks;
-    /*
-    DPCT1012:34: Detected kernel execution time measurement pattern and
-    generated an initial code for time measurements in SYCL. You can change the
-    way time is measured depending on your goals.
-    */
-    /*
-    DPCT1024:35: The original code returned the error code that was further
-    consumed by the program logic. This original code was replaced with 0. You
-    may need to rewrite the program logic consuming the error code.
-    */
+
     kernelEvent_ct1_i = std::chrono::steady_clock::now();
     checkCudaErrors(
         (*kernelEvent[i] = streams[i]->ext_oneapi_submit_barrier(), 0));
 
     // make the last stream wait for the kernel event to be recorded
-    /*
-    DPCT1003:36: Migrated API does not return error code. (*, 0) is inserted.
-    You may need to rewrite this code.
-    */
     checkCudaErrors(
         (streams[nstreams - 1]->ext_oneapi_submit_barrier({*kernelEvent[i]}),
          0));
@@ -270,10 +209,7 @@ int main(int argc, char **argv) {
           sum(d_a, nkernels, item_ct1, s_clocks_acc_ct1.get_pointer());
         });
   });
-  /*
-  DPCT1003:37: Migrated API does not return error code. (*, 0) is inserted. You
-  may need to rewrite this code.
-  */
+
   checkCudaErrors((stop_event_streams_nstreams_1 =
                        streams[nstreams - 1]->memcpy(a, d_a, sizeof(clock_t)),
                    0));
@@ -282,26 +218,14 @@ int main(int argc, char **argv) {
   // processing other tasks in parallel
 
   // in this sample we just wait until the GPU is done
-  /*
-  DPCT1012:38: Detected kernel execution time measurement pattern and generated
-  an initial code for time measurements in SYCL. You can change the way time is
-  measured depending on your goals.
-  */
-  /*
-  DPCT1024:39: The original code returned the error code that was further
-  consumed by the program logic. This original code was replaced with 0. You may
-  need to rewrite the program logic consuming the error code.
-  */
+
   dpct::get_current_device().queues_wait_and_throw();
   stop_event_streams_nstreams_1.wait();
   stop_event_ct1 = std::chrono::steady_clock::now();
   checkCudaErrors(
       (*stop_event = dpct::get_default_queue().ext_oneapi_submit_barrier(), 0));
   checkCudaErrors(0);
-  /*
-  DPCT1003:40: Migrated API does not return error code. (*, 0) is inserted. You
-  may need to rewrite this code.
-  */
+
   checkCudaErrors((elapsed_time = std::chrono::duration<float, std::milli>(
                                       stop_event_ct1 - start_event_ct1)
                                       .count(),
