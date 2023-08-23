@@ -46,10 +46,39 @@
 // This is a kernel that does no real work but runs at least for a specified
 // number of clocks
 void clock_block(clock_t *d_o, clock_t clock_count) {
-  for (int i = 0; i < 500000; i++) {
-    d_o[0] = d_o[0] + i;
+  /*
+  DPCT1008:22: clock function is not defined in SYCL. This is a
+  hardware-specific feature. Consult with your hardware vendor to find a
+  replacement.
+  */
+  unsigned int start_clock = (unsigned int)clock();
+
+  clock_t clock_offset = 0;
+
+  while (clock_offset < clock_count) {
+    /*
+    DPCT1008:23: clock function is not defined in SYCL. This is a
+    hardware-specific feature. Consult with your hardware vendor to find a
+    replacement.
+    */
+    unsigned int end_clock = (unsigned int)clock();
+
+    // The code below should work like
+    // this (thanks to modular arithmetics):
+    //
+    // clock_offset = (clock_t) (end_clock > start_clock ?
+    //                           end_clock - start_clock :
+    //                           end_clock + (0xffffffffu - start_clock));
+    //
+    // Indeed, let m = 2^32 then
+    // end - start = end + m - start (mod m).
+
+    clock_offset = (clock_t)(end_clock - start_clock);
   }
+
+  d_o[0] = clock_offset;
 }
+
 // Single warp reduction kernel
 void sum(clock_t *d_clocks, int N, const sycl::nd_item<3> &item_ct1,
          clock_t *s_clocks) {
