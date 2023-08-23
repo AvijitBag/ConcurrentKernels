@@ -77,7 +77,7 @@ For this sample, the SYCLomatic tool automatically migrates 100% of the CUDA cod
 ## Manual Workarounds
 In SYCL kernel, there is no clock feature support. In future it can be added in SYCL. 
 
-Currently in 02_sycl_migrated added temporary code to make it executable.
+Currently in `02_sycl_migrated` added temporary code to make it executable.
  ```
  void clock_block(clock_t *d_o, clock_t clock_count) {
    for (int i = 0; i < 500000; i++) {
