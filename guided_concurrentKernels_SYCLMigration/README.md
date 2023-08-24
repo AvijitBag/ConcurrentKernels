@@ -146,13 +146,10 @@ If you receive an error message, troubleshoot the problem using the **Diagnostic
 The following example is for `02_sycl_migrated` for GPU on **Intel(R) UHD Graphics [0x9a60]**.
 ```
 [./a.out] - Starting...
-MapSMtoCores for SM 1.3 is undefined.  Default to use 128 Cores/SM
-GPU Device 1: "Kepler" with compute capability 3.0
-
 > Detected Compute SM 3.0 hardware with 12 multi-processors
 Expected time for serial execution of 8 kernels = 0.080s
 Expected time for concurrent execution of 8 kernels = 0.010s
-Measured time for sample = 0.598s
+Measured time for sample = 0.256s
 Test passed
 ```
 
