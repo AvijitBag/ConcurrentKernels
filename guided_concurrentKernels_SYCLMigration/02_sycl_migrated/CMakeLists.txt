@@ -1,4 +1,8 @@
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsycl")
+if(MAX_GPU)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsycl -fsycl-targets=intel_gpu_pvc -Xsycl-target-backend '-options -ze-intel-enable-auto-large-GRF-mode' -D MAX_GPU")
+else()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsycl ")
+endif()
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
 include_directories(${CMAKE_SOURCE_DIR}/02_sycl_migrated/Common/)
 
