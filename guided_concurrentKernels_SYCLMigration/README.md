@@ -31,8 +31,8 @@ This sample contains two versions of the code in the following folders:
 | Hardware              | Intel® Gen9 <br> Gen11 <br> Xeon CPU <br> Data Center GPU Max <br> Nvidia Testla P100 <br> Nvidia A100 <br> Nvidia H100 
 | Software              | SYCLomatic (Tag - 20230720) <br> Intel® oneAPI Base Toolkit (Base Kit) version 2023.2.1 <br> DPC++ CUDA® plugin (to run SYCL™ applications on NVIDIA® GPUs)
 
-For information on how to use SYCLomatic, refer to the materials at *[Migrate from CUDA* to C++ with SYCL*](https://www.intel.com/content/www/us/en/developer/tools/oneapi/training/migrate-from-cuda-to-cpp-with-sycl.html)*.
-
+For more information on how to install Syclomatic Tool & DPC++ CUDA® plugin, visit [Migrate from CUDA* to C++ with SYCL*](https://www.intel.com/content/www/us/en/developer/tools/oneapi/training/migrate-from-cuda-to-cpp-with-sycl.html#gs.v354cy) <br>
+[Install oneAPI for NVIDIA GPUs](https://developer.codeplay.com/products/oneapi/nvidia/2023.2.1/guides/get-started-guide-nvidia)
 
 ## Key Implementation Details
 
