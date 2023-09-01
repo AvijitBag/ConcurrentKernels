@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
 
   // use command-line specified CUDA device, otherwise use device with highest
   // Gflops/s
-  cuda_device = findCudaDevice(argc, (const char **)argv);
+  //cuda_device = findCudaDevice(argc, (const char **)argv);
 
   dpct::device_info deviceProp;
   checkCudaErrors(cuda_device = dpct::dev_mgr::instance().current_device_id());
