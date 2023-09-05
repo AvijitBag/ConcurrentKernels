@@ -23,6 +23,9 @@ This sample contains two versions of the code in the following folders:
 |`01_dpct_output`      | Contains output of SYCLomatic Tool used to migrate SYCL-compliant code from CUDA code. This SYCL code has some unmigrated code that has to be manually fixed to get full functionality. (The code does not functionally work as supplied.)
 |`02_sycl_migrated`    | Contains manually migrated SYCL code from CUDA code.
 
+## CUDA source code evaluation
+The `Concurrent Kernels` sample demonstrates the use of SYCL queues for concurrent execution of several kernels on GPU devices. It is implemented using SYCL to achieve parallel execution of kernels to a GPU or CPU and further demonstrates how to optimize and improve processing time.
+
 ## Prerequisites
 
 | Optimized for         | Description
