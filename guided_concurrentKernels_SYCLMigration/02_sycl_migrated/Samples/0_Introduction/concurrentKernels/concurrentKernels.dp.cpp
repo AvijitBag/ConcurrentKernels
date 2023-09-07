@@ -182,7 +182,10 @@ int main(int argc, char **argv) {
       cgh.parallel_for(
           sycl::nd_range<3>(sycl::range<3>(1, 1, 1), sycl::range<3>(1, 1, 1)),
           [=](sycl::nd_item<3> item_ct1) {
-            clock_block(d_a_i_ct0, time_clocks);
+            //clock_block(d_a_i_ct0, time_clocks);
+            for (int i = 0; i < 20000; i++) {
+                d_a_i_ct0[0] = d_a_i_ct0[0] +i;
+            }
           });
     });
     total_clocks += time_clocks;
