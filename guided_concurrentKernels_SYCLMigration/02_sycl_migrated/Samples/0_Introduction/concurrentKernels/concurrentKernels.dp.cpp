@@ -40,24 +40,25 @@
 #include <helper_cuda.h>
 #include <helper_functions.h>
 #include <time.h>
-
 #include <chrono>
 
 // This is a kernel that does no real work but runs at least for a specified
-// number of clocks
-void clock_block(clock_t *d_o, clock_t clock_count) {
-  for (int i = 0; i < 500000; i++) {
-    d_o[0] = d_o[0] + i;
+// number of count
+void count_block(long *d_o, long clock_count, sycl::nd_item<3> &item_ct1) {
+  for (int i = item_ct1.get_local_id(2); i < 23000;
+       i+=1) {
+    auto dummy = sycl::sin((float)i) + sycl::cos((float)i);
+    d_o[0] = d_o[0] + i;    
   }
 }
 
 // Single warp reduction kernel
-void sum(clock_t *d_clocks, int N, const sycl::nd_item<3> &item_ct1,
-         clock_t *s_clocks) {
+void sum(long *d_clocks, int N, const sycl::nd_item<3> &item_ct1,
+         long *s_clocks) {
   // Handle to thread block group
   auto cta = item_ct1.get_group();
 
-  clock_t my_sum = 0;
+  long my_sum = 0;
 
   for (int i = item_ct1.get_local_id(2); i < N;
        i += item_ct1.get_local_range(2)) {
@@ -83,7 +84,7 @@ void sum(clock_t *d_clocks, int N, const sycl::nd_item<3> &item_ct1,
 int main(int argc, char **argv) {
   int nkernels = 8;             // number of concurrent kernels
   int nstreams = nkernels + 1;  // use one more stream than concurrent kernel
-  int nbytes = nkernels * sizeof(clock_t);  // number of data bytes
+  int nbytes = nkernels * sizeof(long);  // number of data bytes
   float kernel_time = 10;                   // time the kernel should run in ms
   float elapsed_time;                       // timing variables
   int cuda_device = 0;
@@ -118,15 +119,15 @@ int main(int argc, char **argv) {
          deviceProp.get_max_compute_units());
 
   // allocate host memory
-  clock_t *a = 0;  // pointer to the array data in host memory
+  long *a = 0;  // pointer to the array data in host memory
   checkCudaErrors(
-      (a = (clock_t *)sycl::malloc_host(nbytes, dpct::get_default_queue()), 0));
+      (a = (long *)sycl::malloc_host(nbytes, dpct::get_default_queue()), 0));
 
   // allocate device memory
-  clock_t *d_a = 0;  // pointers to data and init value in the device memory
+  long *d_a = 0;  // pointers to data and init value in the device memory
 
   checkCudaErrors(
-      (d_a = (clock_t *)sycl::malloc_device(nbytes, dpct::get_default_queue()),
+      (d_a = (long *)sycl::malloc_device(nbytes, dpct::get_default_queue()),
        0));
 
   // allocate and initialize an array of stream handles
@@ -160,14 +161,14 @@ int main(int argc, char **argv) {
 
   //////////////////////////////////////////////////////////////////////
   // time execution with nkernels streams
-  clock_t total_clocks = 0;
+  long total_clocks = 0;
 #if defined(__arm__) || defined(__aarch64__)
   // the kernel takes more time than the channel reset time on arm archs, so to
   // prevent hangs reduce time_clocks.
-  clock_t time_clocks = (clock_t)(kernel_time * (deviceProp.clockRate / 100));
+  long time_clocks = (long)(kernel_time * (deviceProp.clockRate / 100));
 #else
-  clock_t time_clocks =
-      (clock_t)(kernel_time * deviceProp.get_max_clock_frequency());
+  long time_clocks =
+      (long)(kernel_time * deviceProp.get_max_clock_frequency());
 #endif
 
   sycl::event stop_event_streams_nstreams_1;
@@ -182,10 +183,7 @@ int main(int argc, char **argv) {
       cgh.parallel_for(
           sycl::nd_range<3>(sycl::range<3>(1, 1, 1), sycl::range<3>(1, 1, 1)),
           [=](sycl::nd_item<3> item_ct1) {
-            //clock_block(d_a_i_ct0, time_clocks);
-            for (int i = 0; i < 20000; i++) {
-                d_a_i_ct0[0] = d_a_i_ct0[0] +i;
-            }
+            count_block(d_a_i_ct0, time_clocks, item_ct1);
           });
     });
     total_clocks += time_clocks;
@@ -204,7 +202,7 @@ int main(int argc, char **argv) {
   // the commands in this stream get dispatched as soon as all the kernel events
   // have been recorded
   streams[nstreams - 1]->submit([&](sycl::handler &cgh) {
-    sycl::local_accessor<clock_t, 1> s_clocks_acc_ct1(sycl::range<1>(32), cgh);
+    sycl::local_accessor<long, 1> s_clocks_acc_ct1(sycl::range<1>(32), cgh);
 
     cgh.parallel_for(
         sycl::nd_range<3>(sycl::range<3>(1, 1, 32), sycl::range<3>(1, 1, 32)),
@@ -214,7 +212,7 @@ int main(int argc, char **argv) {
   });
 
   checkCudaErrors((stop_event_streams_nstreams_1 =
-                       streams[nstreams - 1]->memcpy(a, d_a, sizeof(clock_t)),
+                       streams[nstreams - 1]->memcpy(a, d_a, sizeof(long)),
                    0));
 
   // at this point the CPU has dispatched all work for the GPU and can continue
