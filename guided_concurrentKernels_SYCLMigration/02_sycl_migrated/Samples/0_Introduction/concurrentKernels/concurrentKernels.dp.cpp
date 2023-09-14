@@ -44,7 +44,7 @@
 
 // This is a kernel that does no real work but runs at least for a specified
 // number of count
-void count_block(long *d_o, long time_count, sycl::nd_item<3> &item_ct1) {
+void count_block(long *d_o, sycl::nd_item<3> &item_ct1) {
   for (int i = item_ct1.get_local_id(2); i < 23000;
        i+=1) {
     auto dummy = sycl::sin((float)i) + sycl::cos((float)i);
@@ -183,7 +183,7 @@ int main(int argc, char **argv) {
       cgh.parallel_for(
           sycl::nd_range<3>(sycl::range<3>(1, 1, 1), sycl::range<3>(1, 1, 1)),
           [=](sycl::nd_item<3> item_ct1) {
-            count_block(d_a_i_ct0, time_count, item_ct1);
+            count_block(d_a_i_ct0, item_ct1);
           });
     });
     total_count += time_count;
@@ -238,7 +238,7 @@ int main(int argc, char **argv) {
          nkernels, kernel_time / 1000.0f);
   printf("Measured time for sample = %.3fs\n", elapsed_time / 1000.0f);
 
-  bool bTestResult = (a[0] > total_clocks);
+  bool bTestResult = (a[0] > total_count);
 
   // release resources
   for (int i = 0; i < nkernels; i++) {
