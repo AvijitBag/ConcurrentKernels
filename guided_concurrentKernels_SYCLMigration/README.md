@@ -4,7 +4,7 @@ The `Concurrent Kernels` sample demonstrates the use of SYCL queues for concurre
 
 | Area                   | Description
 |:---                    |:---
-| What you will learn    | How to begin migrating CUDA to SYCL
+| What you will learn    | How to migrate CUDA to SYCL
 | Time to complete       | 15 minutes
 | Category               | Concepts and Functionality
 
