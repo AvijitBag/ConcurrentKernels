@@ -44,7 +44,7 @@
 
 // This is a kernel that does no real work but runs at least for a specified
 // number of count
-void count_block(long *d_o, long clock_count, sycl::nd_item<3> &item_ct1) {
+void count_block(long *d_o, long time_count, sycl::nd_item<3> &item_ct1) {
   for (int i = item_ct1.get_local_id(2); i < 23000;
        i+=1) {
     auto dummy = sycl::sin((float)i) + sycl::cos((float)i);
@@ -53,8 +53,8 @@ void count_block(long *d_o, long clock_count, sycl::nd_item<3> &item_ct1) {
 }
 
 // Single warp reduction kernel
-void sum(long *d_clocks, int N, const sycl::nd_item<3> &item_ct1,
-         long *s_clocks) {
+void sum(long *d_count, int N, const sycl::nd_item<3> &item_ct1,
+         long *s_count) {
   // Handle to thread block group
   auto cta = item_ct1.get_group();
 
@@ -62,23 +62,23 @@ void sum(long *d_clocks, int N, const sycl::nd_item<3> &item_ct1,
 
   for (int i = item_ct1.get_local_id(2); i < N;
        i += item_ct1.get_local_range(2)) {
-    my_sum += d_clocks[i];
+    my_sum += d_count[i];
   }
 
-  s_clocks[item_ct1.get_local_id(2)] = my_sum;
+  s_count[item_ct1.get_local_id(2)] = my_sum;
 
   item_ct1.barrier();
 
   for (int i = 16; i > 0; i /= 2) {
     if (item_ct1.get_local_id(2) < i) {
-      s_clocks[item_ct1.get_local_id(2)] +=
-          s_clocks[item_ct1.get_local_id(2) + i];
+      s_count[item_ct1.get_local_id(2)] +=
+          s_count[item_ct1.get_local_id(2) + i];
     }
 
     item_ct1.barrier();
   }
 
-  d_clocks[0] = s_clocks[0];
+  d_count[0] = s_count[0];
 }
 
 int main(int argc, char **argv) {
@@ -161,13 +161,13 @@ int main(int argc, char **argv) {
 
   //////////////////////////////////////////////////////////////////////
   // time execution with nkernels streams
-  long total_clocks = 0;
+  long total_count = 0;
 #if defined(__arm__) || defined(__aarch64__)
   // the kernel takes more time than the channel reset time on arm archs, so to
-  // prevent hangs reduce time_clocks.
-  long time_clocks = (long)(kernel_time * (deviceProp.clockRate / 100));
+  // prevent hangs reduce time_count.
+  long time_count = (long)(kernel_time * (deviceProp.clockRate / 100));
 #else
-  long time_clocks =
+  long time_count =
       (long)(kernel_time * deviceProp.get_max_clock_frequency());
 #endif
 
@@ -183,10 +183,10 @@ int main(int argc, char **argv) {
       cgh.parallel_for(
           sycl::nd_range<3>(sycl::range<3>(1, 1, 1), sycl::range<3>(1, 1, 1)),
           [=](sycl::nd_item<3> item_ct1) {
-            count_block(d_a_i_ct0, time_clocks, item_ct1);
+            count_block(d_a_i_ct0, time_count, item_ct1);
           });
     });
-    total_clocks += time_clocks;
+    total_count += time_count;
 
     kernelEvent_ct1_i = std::chrono::steady_clock::now();
     checkCudaErrors(
@@ -202,12 +202,12 @@ int main(int argc, char **argv) {
   // the commands in this stream get dispatched as soon as all the kernel events
   // have been recorded
   streams[nstreams - 1]->submit([&](sycl::handler &cgh) {
-    sycl::local_accessor<long, 1> s_clocks_acc_ct1(sycl::range<1>(32), cgh);
+    sycl::local_accessor<long, 1> s_count_acc_ct1(sycl::range<1>(32), cgh);
 
     cgh.parallel_for(
         sycl::nd_range<3>(sycl::range<3>(1, 1, 32), sycl::range<3>(1, 1, 32)),
         [=](sycl::nd_item<3> item_ct1) {
-          sum(d_a, nkernels, item_ct1, s_clocks_acc_ct1.get_pointer());
+          sum(d_a, nkernels, item_ct1, s_count_acc_ct1.get_pointer());
         });
   });
 
